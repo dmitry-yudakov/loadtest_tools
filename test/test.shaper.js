@@ -47,7 +47,7 @@ describe("Shaper", function () {
 	});
 
 	describe("Accuracy", function () {
-		it('should test the speed', function (done) {
+		it('should test the speed - longer execution time is ok', function (done) {
 			var count = 0;
 			shaper = shaperCreator.create({
 				active_dialogs: 4,
@@ -70,8 +70,12 @@ describe("Shaper", function () {
 			}, 50);
 			setTimeout(function () {
 				expect(count).to.equal(16);
-				done();
+				shaper.stop();
 			}, 70);
+			setTimeout(function () {
+				expect(count).to.equal(16);
+				done();
+			}, 90);
 		});
 
 	});
