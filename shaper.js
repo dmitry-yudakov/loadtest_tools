@@ -1,3 +1,8 @@
+// Expected settings:
+// 	active_dialogs
+//	callback_new - mandatory, called when new dialog is created
+//		called with arguments (cbDone, cbResponse, cbRequest)
+//	max_resp_time - limit of average response time
 function Shaper(settings){
 	if(typeof(settings) !== 'object')
 		throw new Error("Object with properties active_dialogs|response_time, callback_new are expected");
@@ -25,12 +30,15 @@ Shaper.prototype.startNewIfNeeded = function() {
 		try {
 			var inst = new Instance(
 				that.settings.callback_new,
-				function onResp() {
-					//TODO
-				},
 				function onDone() {
 					--that.active_dialogs;
 					that.startNewIfNeeded();
+				},
+				function onResp() {
+					//TODO
+				},
+				function onReq() {
+					// TODO
 				}
 			);
 		} catch(err) {
@@ -48,9 +56,9 @@ Shaper.prototype.stop = function() {
 	this.active_state = false;
 }
 
-function Instance(cbUserNew, cbResponse, cbDone)
+function Instance(cbUserNew, cbDone, cbResponse, cbRequest)
 {
-	cbUserNew(cbResponse, cbDone);
+	cbUserNew(cbDone, cbResponse, cbRequest);
 }
 
 exports.create = function(settings) {

@@ -33,7 +33,7 @@ describe("Shaper", function () {
 		it('should test single instance interfaces', function (done) {
 			shaper = shaperCreator.create({
 				active_dialogs: 1,
-				callback_new: function (cbResp, cbDone) {
+				callback_new: function (cbDone, cbResp) {
 					assert.isFunction(cbResp, 'callback Response is not a function');
 					assert.isFunction(cbDone, 'callback Done is not a function');
 					// leave it hanging for the moment
@@ -51,7 +51,7 @@ describe("Shaper", function () {
 			var count = 0;
 			shaper = shaperCreator.create({
 				active_dialogs: 4,
-				callback_new: function (cbResp, cbDone) {
+				callback_new: function (cbDone, cbResp) {
 					++count;
 					setTimeout(function () {
 						cbDone();

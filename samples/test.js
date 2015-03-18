@@ -10,7 +10,7 @@ setInterval(function() {
 }, 1000);
 
 
-function newDialog(cbOnResp, cbDone) {
+function newDialog(cbDone, cbResp) {
 //	console.log('Create new dialog');
 	++countThisSecond;
 	setTimeout(function(){
