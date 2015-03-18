@@ -30,12 +30,9 @@ Shaper.prototype.startNewIfNeeded = function(recommendedQuota) {
 	if(!this.active_state) return;
 
 	if(debug) console.log('startNewIfNeeded(), recommendedQuota:', recommendedQuota);
-	var quotaLeft = ( this.settings.active_dialogs ? this.settings.active_dialogs - this.active_dialogs : undefined );
-	if(quotaLeft === undefined || (recommendedQuota !== undefined && recommendedQuota < quotaLeft) ) {
-		// choose the smaller of what's permitted from either active_dialogs or recommended response time
-		quotaLeft = recommendedQuota;
-	}
-	if( (quotaLeft === undefined || quotaLeft <= 0) && this.active_dialogs === 0) { // start one to get it going
+	var activeDlgQuota = ( this.settings.active_dialogs ? this.settings.active_dialogs - this.active_dialogs : 0xFFFFFF );//big value if no limit
+	var quotaLeft = Math.min(activeDlgQuota, recommendedQuota);
+	if(quotaLeft <= 0 && this.active_dialogs <= 0) { // no dialogs and no recommended quota, just start one to prevent stopping
 		quotaLeft = 1;
 	}
 	if( quotaLeft <= 0 ) return;
@@ -54,7 +51,7 @@ Shaper.prototype.startNewIfNeeded = function(recommendedQuota) {
 
 Shaper.prototype.start = function() {
 	this.active_state = true;
-	this.startNewIfNeeded();
+	this.startNewIfNeeded(1);
 }
 Shaper.prototype.stop = function() {
 	this.active_state = false;
@@ -75,18 +72,17 @@ function Instance(shaper, inst_id)
 Instance.prototype.onDone = function() {
 	if(debug) console.log('onDone() called, inst id:', this.inst_id);
 	--this.parentShaper.active_dialogs;
-	var recommendedNewInst;
+	var recommendedNewInst = 2;//default
 	if(this.parentShaper.settings.response_time_msec && this.numResps) {
 		var avgRespTime = this.sumRespTimes/this.numResps;
 		var maxRespTime = this.parentShaper.settings.response_time_msec;
-		if( avgRespTime < maxRespTime ) {
-			recommendedNewInst = 2;
-		} else if(avgRespTime > maxRespTime) {
+		if(avgRespTime > maxRespTime) { // response too slow, decrease new sessions
 			recommendedNewInst = 0;
-		} else {
-			// practically impossible for the moment, TODO detect close values
-			recommendedNewInst = 1;
 		}
+//		else {
+//			// practically impossible for the moment, TODO detect close values
+//			recommendedNewInst = 1;
+//		}
 	}
 	this.parentShaper.startNewIfNeeded(recommendedNewInst);
 },

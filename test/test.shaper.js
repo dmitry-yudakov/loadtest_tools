@@ -48,32 +48,39 @@ describe("Shaper", function () {
 
 	describe("Accuracy - longer execution times are ok", function () {
 		it('should test the speed with active_dialogs', function (done) {
-			var count = 0;
+			var count = 0, active = 0;
 			shaper = shaperCreator.create({
 				active_dialogs: 4,
 				callback_new: function (cbDone, cbResp) {
 					++count;
+					++active;
 					setTimeout(function () {
 						cbDone();
+						--active;
 					}, 20);
 				}
 			});
 			shaper.start();
 			setTimeout(function () {
-				expect(count).to.equal(4);
+				expect(count).to.equal(1);
+				expect(active).to.equal(1);
 			}, 10);
 			setTimeout(function () {
-				expect(count).to.equal(8);
+				expect(count).to.equal(3);
+				expect(active).to.equal(2);
 			}, 30);
 			setTimeout(function () {
-				expect(count).to.equal(12);
+				expect(count).to.equal(7);
+				expect(active).to.equal(4);
 			}, 50);
 			setTimeout(function () {
-				expect(count).to.equal(16);
+				expect(count).to.equal(11);
+				expect(active).to.equal(4);
 				shaper.stop();
 			}, 70);
 			setTimeout(function () {
-				expect(count).to.equal(16);
+				expect(count).to.equal(11);
+				expect(active).to.equal(0);
 				done();
 			}, 90);
 		});
@@ -125,7 +132,7 @@ describe("Shaper", function () {
 
 		it('should test the speed with active dialogs and response_time_msec', function (done) {
 			var count = 0, active = 0;
-			var respTimes = [ 2, 2, 2, 3, 3, 3, 8, 8, 8, 2 ], limit = respTimes.length;
+			var respTimes = [ 2, 3, 3, 8, 8, 8, 2 ], limit = respTimes.length;
 			shaper = shaperCreator.create({
 				active_dialogs: 3,
 				response_time_msec: 5,
@@ -146,24 +153,24 @@ describe("Shaper", function () {
 			// it begins with active_dialogs instances
 			shaper.start();
 			setTimeout(function () {
-				expect(count).to.equal(3);
-				expect(active).to.equal(3);
+				expect(count).to.equal(1);
+				expect(active).to.equal(1);
 			}, 10);
+			setTimeout(function () {
+				expect(count).to.equal(3);
+				expect(active).to.equal(2);
+			}, 30);
 			setTimeout(function () {
 				expect(count).to.equal(6);
 				expect(active).to.equal(3);
-			}, 30);
-			setTimeout(function () {
-				expect(count).to.equal(9);
-				expect(active).to.equal(3);
 			}, 50);
 			setTimeout(function () {
-				expect(count).to.equal(10);
+				expect(count).to.equal(7);
 				expect(active).to.equal(1);
 				shaper.stop();
 			}, 70);
 			setTimeout(function () {
-				expect(count).to.equal(10);
+				expect(count).to.equal(7);
 				expect(active).to.equal(0);
 				done();
 			}, 90);
