@@ -1,8 +1,10 @@
+var debug = true;
+
 // Expected settings:
 // 	active_dialogs
 //	callback_new - mandatory, called when new dialog is created
 //		called with arguments (cbDone, cbResponse, cbRequest)
-//	max_resp_time - limit of average response time
+//	response_time_msec - limit of average response time
 function Shaper(settings){
 	if(typeof(settings) !== 'object')
 		throw new Error("Object with properties active_dialogs|response_time, callback_new are expected");
@@ -10,6 +12,8 @@ function Shaper(settings){
 	this.settings = settings;
 	this.active_dialogs = 0;
 	this.active_state = false;
+	debug = settings.debug;
+	this.indexer = 0;
 	
 //	this.active_dialogs = params.active_dialogs;
 //	this.response_time = params.response_time;
@@ -18,29 +22,29 @@ function Shaper(settings){
 	
 	if( typeof(this.settings.callback_new) !== 'function' )
 		throw new Error("callback_new needs to be function");
+	if( !this.settings.active_dialogs && !this.settings.response_time_msec )
+		throw new Error("either active_dialogs or response_time_msec setting must be given");
 }
 
-Shaper.prototype.startNewIfNeeded = function() {
+Shaper.prototype.startNewIfNeeded = function(recommendedQuota) {
 	if(!this.active_state) return;
 
-	var quotaLeft = this.settings.active_dialogs - this.active_dialogs;
+	if(debug) console.log('startNewIfNeeded(), recommendedQuota:', recommendedQuota);
+	var quotaLeft = ( this.settings.active_dialogs ? this.settings.active_dialogs - this.active_dialogs : undefined );
+	if(quotaLeft === undefined || (recommendedQuota !== undefined && recommendedQuota < quotaLeft) ) {
+		// choose the smaller of what's permitted from either active_dialogs or recommended response time
+		quotaLeft = recommendedQuota;
+	}
+	if( (quotaLeft === undefined || quotaLeft <= 0) && this.active_dialogs === 0) { // start one to get it going
+		quotaLeft = 1;
+	}
+	if( quotaLeft <= 0 ) return;
+
 	var that = this;
 	for( var ii = 0; ii < quotaLeft; ++ii ) {
 		++that.active_dialogs;
 		try {
-			var inst = new Instance(
-				that.settings.callback_new,
-				function onDone() {
-					--that.active_dialogs;
-					that.startNewIfNeeded();
-				},
-				function onResp() {
-					//TODO
-				},
-				function onReq() {
-					// TODO
-				}
-			);
+			var inst = new Instance(that, ++that.indexer);
 		} catch(err) {
 			console.log(err);
 			--that.active_dialogs;
@@ -56,9 +60,50 @@ Shaper.prototype.stop = function() {
 	this.active_state = false;
 }
 
-function Instance(cbUserNew, cbDone, cbResponse, cbRequest)
+function Instance(shaper, inst_id)
 {
-	cbUserNew(cbDone, cbResponse, cbRequest);
+	this.inst_id = inst_id;
+	if(debug) console.log('New Instance, inst id:', this.inst_id);
+	this.parentShaper = shaper;
+	if(shaper.settings.response_time_msec) {
+		this.lastTimestamp = Date.now();
+		this.sumRespTimes = 0;
+		this.numResps = 0;
+	}
+	shaper.settings.callback_new(this.onDone.bind(this), this.onResp.bind(this), this.onReq.bind(this));
+}
+Instance.prototype.onDone = function() {
+	if(debug) console.log('onDone() called, inst id:', this.inst_id);
+	--this.parentShaper.active_dialogs;
+	var recommendedNewInst;
+	if(this.parentShaper.settings.response_time_msec && this.numResps) {
+		var avgRespTime = this.sumRespTimes/this.numResps;
+		var maxRespTime = this.parentShaper.settings.response_time_msec;
+		if( avgRespTime < maxRespTime ) {
+			recommendedNewInst = 2;
+		} else if(avgRespTime > maxRespTime) {
+			recommendedNewInst = 0;
+		} else {
+			// practically impossible for the moment, TODO detect close values
+			recommendedNewInst = 1;
+		}
+	}
+	this.parentShaper.startNewIfNeeded(recommendedNewInst);
+},
+Instance.prototype.onResp = function() {
+	if(debug) console.log('onResp() called, inst id:', this.inst_id);
+	if(this.parentShaper.settings.response_time_msec) {
+		this.numResps++;
+		var timeNow = Date.now();
+		this.sumRespTimes += timeNow - this.lastTimestamp;
+		this.lastTimestamp = timeNow;
+	}
+},
+Instance.prototype.onReq = function() {
+	if(debug) console.log('onReq() called, inst id:', this.inst_id);
+	if(this.parentShaper.settings.response_time_msec) {
+		this.lastTimestamp = Date.now();
+	}
 }
 
 exports.create = function(settings) {
