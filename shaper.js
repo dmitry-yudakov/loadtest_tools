@@ -67,7 +67,8 @@ function Instance(shaper, inst_id)
 		this.sumRespTimes = 0;
 		this.numResps = 0;
 	}
-	shaper.settings.callback_new(this.onDone.bind(this), this.onResp.bind(this), this.onReq.bind(this));
+	var that = this;
+	shaper.settings.callback_new(function(){that.onDone()}, function(){that.onResp()}, function(){that.onReq()});
 }
 Instance.prototype.onDone = function() {
 	if(debug) console.log('onDone() called, inst id:', this.inst_id);
