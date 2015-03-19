@@ -1,5 +1,6 @@
 var shaper = require('../shaper.js').create({
-//	active_dialogs: 10,
+	active_dialogs: 6,
+	initial_dialogs: 3,
 	response_time_msec: 110,
 	callback_new: newDialog,
 	debug: true
@@ -11,19 +12,19 @@ setInterval(function() {
 	countThisSecond = 0;
 }, 1000);
 
-//var plannedRespTimes = [ 80, 80, 120, 120, 100 ];
-var plannedRespTimes = [ 80, 120, 80, 120, 110 ];
-var dlgCount = plannedRespTimes.length;
+var plannedRespTimes = [ 80, 120, 80, 120, 100 ];
+
 
 function newDialog(cbDone, cbResp) {
-//	console.log('Create new dialog');
 	++countThisSecond;
+
 	var respTime = plannedRespTimes.shift();
 	plannedRespTimes.push(respTime);
+
 	setTimeout( cbResp, respTime );
 	setTimeout( cbResp, respTime*2 );
+
 	setTimeout(function(){
-//		console.log('Close dialog');
 		cbDone();
 	}, 1000);
 }
