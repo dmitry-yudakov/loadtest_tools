@@ -56,6 +56,7 @@ describe("Shaper", function () {
 					++active;
 					setTimeout(function () {
 						cbDone();
+						cbDone();//test protection agains calling cbDone more than once
 						--active;
 					}, 20);
 				}

@@ -61,6 +61,7 @@ Shaper.prototype.stop = function() {
 function Instance(shaper, inst_id)
 {
 	this.inst_id = inst_id;
+	this.done = false;
 	if(debug) console.log('New Instance, inst id:', this.inst_id);
 	this.parentShaper = shaper;
 	if(shaper.settings.response_time_msec) {
@@ -72,6 +73,9 @@ function Instance(shaper, inst_id)
 	shaper.settings.callback_new(function(){that.onDone()}, function(){that.onResp()}, function(){that.onReq()});
 }
 Instance.prototype.onDone = function() {
+	if(this.done) return; // protection against calling onDone more than once
+	this.done = true;
+
 	if(debug) console.log('onDone() called, inst id:', this.inst_id);
 	--this.parentShaper.active_dialogs;
 	var recommendedNewInst = 2;//default
