@@ -13,7 +13,7 @@ The shaper will create X dialogs (1 by default) - when a dialog ends, the shaper
 
 It's possible to set _active_dialogs_ cap limiting total number of active dialogs.
 
-Setting _response_time_msec_ allows the shaper to decide home many new dialogs to start after given dialog ends based on its average response time. It starts 2 if average response time is lower than _response_time_msec_, 0 - if average response time is higher than response_time_msec and 1 if the times are close (this one not ready yet).
+Setting _response_time_msec_ allows the shaper to decide home many new dialogs to start after given dialog ends based on its average response time. It starts 2 if average response time is lower than _response_time_msec_, 0 - if average response time is higher than response_time_msec and 1 if the times are close (_response_time_delta_msec_ defines acceptable closeness).
 
 Creating your new dialogs is implemented by calling _callback_new_ parameter that you provide. When _callback_new_ called, the arguments are _cbDone_, _cbResp_ and _cbReq_. Calling _cbDone_ indicates end of given dialog, calling _cbResp_ registers internally response time since last _cbResp/cbReq_ calling or dialog begin. Calling _onReq_ resets internal timestamp, used for calculating response time - you may omit it if you send request right after receiving response.
 
@@ -71,6 +71,7 @@ git clone git@github.com:dmitry-yudakov/loadtest_tools.git
 * _create( params )_ - creates shaper instance with given parameters, then call _start()_ to get it going. Supported params are:
  * _active_dialogs_ - max number of active dialogs, it's to prevent overloading
  * _response_time_msec_ - max average response time deciding whether to start 2, 1 or 0 new dialogs after each dialog end
+ * _response_time_delta_msec_ - difference between average response time and _response_time_msec_ allowing to accept them as equal
  * _callback_new_ - function the you provide starting new "dialog" or whatever you're intended to loadtest
  * _initial_dialogs_ - number of dialogs to start with
 * _start()_ - starts generating dialogs calling callback_new function

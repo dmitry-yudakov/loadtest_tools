@@ -5,6 +5,7 @@ var debug = true;
 //	callback_new - mandatory, called when new dialog is created
 //		called with arguments (cbDone, cbResponse, cbRequest)
 //	response_time_msec - limit of average response time
+//	response_time_delta_msec - acceptable difference between real and expected response time to consider them equal
 //	initial_dialogs - number of dialogs to start with
 function Shaper(settings){
 	if(typeof(settings) !== 'object')
@@ -82,13 +83,12 @@ Instance.prototype.onDone = function() {
 	if(this.parentShaper.settings.response_time_msec && this.numResps) {
 		var avgRespTime = this.sumRespTimes/this.numResps;
 		var maxRespTime = this.parentShaper.settings.response_time_msec;
-		if(avgRespTime > maxRespTime) { // response too slow, decrease new sessions
+		var delta = this.parentShaper.settings.response_time_delta_msec;
+		if(delta && Math.abs(maxRespTime-avgRespTime) < delta) { // avg resp time is equal to expected
+			recommendedNewInst = 1;
+		} else if(avgRespTime > maxRespTime) { // response too slow, decrease new sessions
 			recommendedNewInst = 0;
 		}
-//		else {
-//			// practically impossible for the moment, TODO detect close values
-//			recommendedNewInst = 1;
-//		}
 	}
 	this.parentShaper.startNewIfNeeded(recommendedNewInst);
 },

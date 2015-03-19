@@ -177,6 +177,52 @@ describe("Shaper", function () {
 			}, 90);
 		});
 
+		it('should test the speed with response_time_msec and delta', function (done) {
+			var count = 0, active = 0;
+			var respTimes = [ 2, 4, 4, 8, 8, 2 ], limit = respTimes.length;
+			shaper = shaperCreator.create({
+				response_time_msec: 5,
+				response_time_delta_msec: 2,
+				callback_new: function (cbDone, cbResp) {
+					if( ++count >= limit ) shaper.stop();
+					++active;
+					var respTime = respTimes.shift();
+
+					setTimeout(function () {cbResp()}, respTime);
+					setTimeout(function () {cbResp()}, respTime*2);
+
+					setTimeout(function () {
+						cbDone();
+						--active;
+					}, 20);
+				}
+			});
+			// it begins with active_dialogs instances
+			shaper.start();
+			setTimeout(function () {
+				expect(count).to.equal(1);
+				expect(active).to.equal(1);
+			}, 10);
+			setTimeout(function () {
+				expect(count).to.equal(3);
+				expect(active).to.equal(2);
+			}, 30);
+			setTimeout(function () {
+				expect(count).to.equal(5);
+				expect(active).to.equal(2);
+			}, 50);
+			setTimeout(function () {
+				expect(count).to.equal(6);
+				expect(active).to.equal(1);
+				shaper.stop();
+			}, 70);
+			setTimeout(function () {
+				expect(count).to.equal(6);
+				expect(active).to.equal(0);
+				done();
+			}, 90);
+		});
+
 		it('should test the speed with response_time_msec using onRequest callback', function (done) {
 			var count = 0, active = 0;
 			var respTimes = [ 2, 2, 2, 8, 8, 8, 8, 2 ], limit = respTimes.length;
