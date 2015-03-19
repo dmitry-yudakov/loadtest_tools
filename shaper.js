@@ -1,10 +1,11 @@
 var debug = true;
 
 // Expected settings:
-// 	active_dialogs
+// 	active_dialogs - max active dialogs cap
 //	callback_new - mandatory, called when new dialog is created
 //		called with arguments (cbDone, cbResponse, cbRequest)
 //	response_time_msec - limit of average response time
+//	initial_dialogs - number of dialogs to start with
 function Shaper(settings){
 	if(typeof(settings) !== 'object')
 		throw new Error("Object with properties active_dialogs|response_time, callback_new are expected");
@@ -51,7 +52,7 @@ Shaper.prototype.startNewIfNeeded = function(recommendedQuota) {
 
 Shaper.prototype.start = function() {
 	this.active_state = true;
-	this.startNewIfNeeded(1);
+	this.startNewIfNeeded(this.settings.initial_dialogs || 1);
 }
 Shaper.prototype.stop = function() {
 	this.active_state = false;
