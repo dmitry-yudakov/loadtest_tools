@@ -2,7 +2,7 @@
   "name": "loadtest_tools",
   "version": "0.0.0",
   "description": "tools for loadtests",
-  "main": "app.js",
+  "main": "shaper.js",
   "scripts": {
     "test": "mocha -R spec"
   },
