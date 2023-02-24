@@ -1,4 +1,4 @@
-var shaper = require('../shaper.js').create({
+var shaper = require('..').Shaper.create({
 	active_dialogs: 6,
 	initial_dialogs: 3,
 	response_time_msec: 110,

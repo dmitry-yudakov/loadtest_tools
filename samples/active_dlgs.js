@@ -1,4 +1,4 @@
-var shaper = require('../shaper.js').create({
+var shaper = require('..').Shaper.create({
 	active_dialogs: 2,
 	callback_new: newDialog
 });
