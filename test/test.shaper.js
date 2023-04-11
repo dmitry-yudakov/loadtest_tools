@@ -4,7 +4,7 @@ var assert = require('chai').assert,
 	expect = require('chai').expect,
 	chai = require('chai'),
 	should = chai.should(),
-	shaperCreator = require('../shaper.js');
+	shaperCreator = require('..').Shaper;
 
 var shaper;
 
