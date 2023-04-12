@@ -74,8 +74,7 @@ git clone git@github.com:dmitry-yudakov/loadtest_tools.git
 - _response_time_msec_ - max average response time deciding whether to start 2, 1 or 0 new dialogs after each dialog end
 - _response_time_delta_msec_ - difference between average response time and _response_time_msec_ allowing to accept them as equal
 - _callback_new_ - function the you provide starting new "dialog" or whatever you're intended to loadtest
-- _initial_dialogs_ - number of dialogs to start with
-- _start()_ - starts generating dialogs calling callback_new function
+- _start([<initial_dialogs>=0])_ - starts generating dialogs calling callback_new function, can be called multiple times for more flexible starting control
 - _stop()_ - stops generating new dialogs, note that existing ones aren't killed
 
 - _callback_new(cbDone, cbResp, cbReq)_ - your function passed as one of the Shaper settings, it will be called allowing you to create your dialog. When it's called few callbacks are passed as arguments. Use them to indicate your dialog end or getting some responses.
